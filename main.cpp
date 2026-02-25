@@ -1,3 +1,4 @@
+
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
@@ -6,6 +7,8 @@
 #include <string>
 #include <vulkan/vulkan_core.h>
 
+#include "glm_config.h"
+
 #define GLFW_INCLUDE_VULKAN
 #define GLFW_INCLUDE_NONE
 #include <vulkan/vulkan.h>
@@ -13,8 +16,8 @@
 #include <GLFW/glfw3.h>
 
 #include "context.h"
-#include "debug.h"
 #include "imgui_integration.h"
+#include "pipeline_simple.h"
 #include "swapchain.h"
 #include "wrappers.h"
 
@@ -77,8 +80,8 @@ public:
         // We have the window, the instance, create a surface from the window to draw onto.
         // Create a Vulkan Surface using GLFW.
         // By using GLFW the current windowing system's surface is created (xcb, win32, etc..)
-        VkSurfaceKHR surface = VK_NULL_HANDLE;
-        VkResult surfaceCreateResult = glfwCreateWindowSurface(m_context.instance(), m_window, NULL, &surface);
+        VkSurfaceKHR surface             = VK_NULL_HANDLE;
+        VkResult     surfaceCreateResult = glfwCreateWindowSurface(m_context.instance(), m_window, NULL, &surface);
         if (surfaceCreateResult != VK_SUCCESS) {
             // TODO: not the best, but will fail the application surely
             throw std::runtime_error("Failed to create window surface!");
@@ -96,20 +99,39 @@ public:
         VkResult swapchainCreated = m_swapchain->Create();
         assert(swapchainCreated == VK_SUCCESS);
 
-        m_cmdPool       = CreateCommandPool(device, m_context.queueFamilyIdx());
-        m_cmdBuffers    = AllocateCommandBuffers(device, m_cmdPool, m_swapchain->images().size());
+        m_cmdPool    = CreateCommandPool(device, m_context.queueFamilyIdx(), "baseCmdPool");
+        m_cmdBuffers = AllocateCommandBuffers(device, m_cmdPool, m_swapchain->images().size(), "baseCmdBuffer");
 
         // Some sync object
-        m_imageFence       = CreateFence(device);
-        m_presentSemaphore = CreateSemaphore(device);
+        m_imageFence       = CreateFence(device, "imageFence");
+        m_presentSemaphore = CreateSemaphore(device, "presentSemaphore");
 
         // Init imgui
         m_imgui.CreateContext(m_context, m_swapchain->format());
+
+        // Set dynamic viewport/scissor infos
+        m_viewport = {
+            .x        = 0,
+            .y        = 0,
+            .width    = (float)m_swapchain->surfaceExtent().width,
+            .height   = (float)m_swapchain->surfaceExtent().height,
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f,
+        };
+
+        m_scissor = {
+            .offset = {0, 0},
+            .extent = m_swapchain->surfaceExtent(),
+        };
     }
 
     void Destroy()
     {
         // TODO: destroy all resources
+        VkDevice device = m_context.device();
+        vkDestroyCommandPool(device, m_cmdPool, nullptr);
+        vkDestroyFence(device, m_imageFence, nullptr);
+        vkDestroySemaphore(device, m_presentSemaphore, nullptr);
 
         m_imgui.Destroy(m_context);
 
@@ -119,10 +141,7 @@ public:
         glfwDestroyWindow(m_window);
     }
 
-    void ShowWindow()
-    {
-        glfwShowWindow(m_window);
-    }
+    void ShowWindow() { glfwShowWindow(m_window); }
 
     void RunLoop();
 
@@ -166,6 +185,8 @@ private:
     std::vector<VkCommandBuffer> m_cmdBuffers       = {};
     VkFence                      m_imageFence       = VK_NULL_HANDLE;
     VkSemaphore                  m_presentSemaphore = VK_NULL_HANDLE;
+    VkViewport                   m_viewport         = {};
+    VkRect2D                     m_scissor          = {};
 };
 
 void Application::RunLoop()
@@ -174,13 +195,16 @@ void Application::RunLoop()
     VkQueue  queue          = m_context.queue();
     VkDevice device         = m_context.device();
 
+    PipelineSimple pipelineSimple("simple");
+    pipelineSimple.Create(device, m_swapchain->format());
+
     int32_t color = 0;
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
         {
             m_imgui.NewFrame();
 
-            ImGui::ShowDemoWindow();
+            // ImGui::ShowDemoWindow();
             ImGui::Begin("Info");
 
             static bool colorAutoInc = true;
@@ -218,7 +242,7 @@ void Application::RunLoop()
             m_swapchain->CmdTransitionToRender(cmdBuffer, swapchainImage, queueFamilyIdx);
 
             // Begin render commands
-            const VkClearValue clearColor = {{{color / 255.0f, 0.0f, 0.0f, 1.0f}}};
+            const VkClearValue                 clearColor      = {{{color / 255.0f, 0.0f, 0.0f, 1.0f}}};
             const VkRenderingAttachmentInfoKHR colorAttachment = {
                 .sType              = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
                 .pNext              = nullptr,
@@ -232,21 +256,32 @@ void Application::RunLoop()
                 .clearValue         = clearColor,
             };
             const VkRenderingInfoKHR renderInfo = {
-                .sType                = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
-                .pNext                = nullptr,
-                .flags                = 0,
-                .renderArea           = {
-                    .offset = {0, 0},
-                    .extent = {m_width, m_height}
-                },
+                .sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
+                .pNext = nullptr,
+                .flags = 0,
+                .renderArea =
+                    {
+                        .offset = {0, 0},
+                        .extent = {m_width, m_height},
+                    },
                 .layerCount           = 1,
                 .viewMask             = 0,
                 .colorAttachmentCount = 1,
                 .pColorAttachments    = &colorAttachment,
                 .pDepthAttachment     = nullptr,
-                .pStencilAttachment   = nullptr
+                .pStencilAttachment   = nullptr,
             };
             vkCmdBeginRendering(cmdBuffer, &renderInfo);
+
+            {
+                glm::mat4 mvp = glm::mat4(1.0f);
+
+                vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineSimple.pipeline());
+                vkCmdSetScissor(cmdBuffer, 0, 1, &m_scissor);
+                vkCmdSetViewport(cmdBuffer, 0, 1, &m_viewport);
+                vkCmdPushConstants(cmdBuffer, pipelineSimple.layout(), VK_SHADER_STAGE_ALL, 0, sizeof(mvp), &mvp);
+                vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
+            }
 
             // Render things
             m_imgui.Draw(cmdBuffer);
@@ -278,6 +313,8 @@ void Application::RunLoop()
 
         vkDeviceWaitIdle(device);
     }
+
+    pipelineSimple.Destroy(device);
 }
 
 int main()

@@ -43,6 +43,8 @@ endif()
 set(NAME app)
 add_executable(${NAME}
     main.cpp
+    pipeline_simple.cpp
+
 
     lib/context.cpp
     lib/imgui_integration.cpp
@@ -58,4 +60,9 @@ target_include_directories(${NAME} PRIVATE
 
 target_link_libraries(${NAME}
     PRIVATE glfw Vulkan::Vulkan imgui
+)
+
+add_shaders(app
+    pipeline_simple.vert SPV_simple_vert
+    pipeline_simple.frag SPV_simple_frag
 )

@@ -4,6 +4,8 @@
 #include <backends/imgui_impl_vulkan.h>
 #include <imgui.h>
 
+#include "debug.h"
+
 static VkDescriptorPool CreateSimpleDescriptorPool(const VkDevice device)
 {
     const VkDescriptorPoolSize poolSizes[] = {
@@ -22,6 +24,9 @@ static VkDescriptorPool CreateSimpleDescriptorPool(const VkDevice device)
     VkDescriptorPool descPool = VK_NULL_HANDLE;
     VkResult         result   = vkCreateDescriptorPool(device, &createInfo, nullptr, &descPool);
     assert((result == VK_SUCCESS) && "");
+
+    SetResourceName(device, VK_OBJECT_TYPE_DESCRIPTOR_POOL, descPool, "ImGUIDescPool");
+
     return descPool;
 }
 

@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <vulkan/vulkan_core.h>
 
+#include "debug.h"
+
 void PrintPhyDeviceInfo(const VkInstance /*instance*/, const VkPhysicalDevice phyDevice)
 {
     VkPhysicalDeviceProperties properties = {};
@@ -15,7 +17,7 @@ void PrintPhyDeviceInfo(const VkInstance /*instance*/, const VkPhysicalDevice ph
     printf("Device Info: %s Vulkan API Version: %u.%u\n", properties.deviceName, apiMajor, apiMinor);
 }
 
-VkCommandPool CreateCommandPool(const VkDevice device, const uint32_t queueFamilyIdx)
+VkCommandPool CreateCommandPool(const VkDevice device, const uint32_t queueFamilyIdx, const std::string& name)
 {
     VkCommandPoolCreateInfo createInfo = {
         .sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
@@ -25,14 +27,18 @@ VkCommandPool CreateCommandPool(const VkDevice device, const uint32_t queueFamil
     };
 
     VkCommandPool cmdPool = VK_NULL_HANDLE;
-    VkResult result = vkCreateCommandPool(device, &createInfo, nullptr, &cmdPool);
+    VkResult      result  = vkCreateCommandPool(device, &createInfo, nullptr, &cmdPool);
     assert((result == VK_SUCCESS) && "Failed to Create VkCommandPool");
+
+    SetResourceName(device, VK_OBJECT_TYPE_COMMAND_POOL, cmdPool, name);
 
     return cmdPool;
 }
 
-std::vector<VkCommandBuffer>
-AllocateCommandBuffers(const VkDevice device, const VkCommandPool cmdPool, const uint32_t count)
+std::vector<VkCommandBuffer> AllocateCommandBuffers(const VkDevice      device,
+                                                    const VkCommandPool cmdPool,
+                                                    const uint32_t      count,
+                                                    const std::string&  name)
 {
     std::vector<VkCommandBuffer> cmdBuffers(count, VK_NULL_HANDLE);
 
@@ -48,10 +54,14 @@ AllocateCommandBuffers(const VkDevice device, const VkCommandPool cmdPool, const
     VkResult result = vkAllocateCommandBuffers(device, &allocInfo, cmdBuffers.data());
     assert((result == VK_SUCCESS) && "Failed to Create VkCommandBuffers");
 
+    for (uint32_t idx = 0; idx < count; idx++) {
+        SetResourceName(device, VK_OBJECT_TYPE_COMMAND_BUFFER, cmdBuffers[idx], name + "_" + std::to_string(idx));
+    }
+
     return cmdBuffers;
 }
 
-VkFence CreateFence(const VkDevice device)
+VkFence CreateFence(const VkDevice device, const std::string& name)
 {
     VkFenceCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
@@ -63,10 +73,12 @@ VkFence CreateFence(const VkDevice device)
     VkResult result = vkCreateFence(device, &createInfo, nullptr, &fence);
     assert((result == VK_SUCCESS) && "Failed to create VkFence");
 
+    SetResourceName(device, VK_OBJECT_TYPE_FENCE, fence, name);
+
     return fence;
 }
 
-VkSemaphore CreateSemaphore(const VkDevice device)
+VkSemaphore CreateSemaphore(const VkDevice device, const std::string& name)
 {
     VkSemaphoreCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
@@ -78,10 +90,15 @@ VkSemaphore CreateSemaphore(const VkDevice device)
     VkResult    result    = vkCreateSemaphore(device, &createInfo, nullptr, &semaphore);
     assert((result == VK_SUCCESS) && "Failed to Create VkSemaphore");
 
+    SetResourceName(device, VK_OBJECT_TYPE_SEMAPHORE, semaphore, name);
+
     return semaphore;
 }
 
-VkShaderModule CreateShaderModule(const VkDevice device, const uint32_t* SPIRVBinary, uint32_t SPIRVBinarySize)
+VkShaderModule CreateShaderModule(const VkDevice     device,
+                                  const uint32_t*    SPIRVBinary,
+                                  uint32_t           SPIRVBinarySize,
+                                  const std::string& name)
 {
     // SPIRVBinarySize is in bytes
 
@@ -96,13 +113,17 @@ VkShaderModule CreateShaderModule(const VkDevice device, const uint32_t* SPIRVBi
     VkShaderModule shaderModule = VK_NULL_HANDLE;
     VkResult       result       = vkCreateShaderModule(device, &shaderModuleCreateInfo, nullptr, &shaderModule);
     assert((result == VK_SUCCESS) && "Failed to Create VkShaderModule");
+
+    SetResourceName(device, VK_OBJECT_TYPE_SHADER_MODULE, shaderModule, name);
+
     // TODO: result check
     return shaderModule;
 }
 
 VkPipelineLayout CreatePipelineLayout(const VkDevice                            device,
                                       const std::vector<VkDescriptorSetLayout>& layouts,
-                                      uint32_t                                  pushConstantSize)
+                                      uint32_t                                  pushConstantSize,
+                                      const std::string&                        name)
 {
     const VkPushConstantRange pushConstantRange = {
         .stageFlags = VK_SHADER_STAGE_ALL,
@@ -123,6 +144,8 @@ VkPipelineLayout CreatePipelineLayout(const VkDevice                            
     VkPipelineLayout layout = VK_NULL_HANDLE;
     VkResult         result = vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &layout);
     assert(result == VK_SUCCESS);
+
+    SetResourceName(device, VK_OBJECT_TYPE_PIPELINE_LAYOUT, layout, name);
 
     return layout;
 }

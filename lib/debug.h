@@ -9,7 +9,7 @@ void SetResourceName(const VkDevice device, VkObjectType objectType, const T res
 {
     static PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT =
         reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetDeviceProcAddr(device, "vkSetDebugUtilsObjectNameEXT"));
-    if (vkSetDebugUtilsObjectNameEXT == nullptr) {
+    if (vkSetDebugUtilsObjectNameEXT == nullptr || name.empty()) {
         return;
     }
 
