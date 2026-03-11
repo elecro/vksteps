@@ -21,9 +21,12 @@ public:
     VkPipelineLayout layout() const { return m_layout; }
     VkDescriptorSet  descSet() { return m_descMgmt.Set(0).Get(); }
 
+    void SetImage(const VkDevice device, const uint32_t bindingIdx, const VkImageView view, const VkSampler sampler);
+
     struct PushConstantData {
         glm::mat4       mvp;
         VkDeviceAddress vertexBufferAddress;
+        uint32_t        textureIdx;
     } pushData = {};
 
 private:

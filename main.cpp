@@ -20,6 +20,7 @@
 #include "pipeline_compute.h"
 #include "pipeline_simple.h"
 #include "swapchain.h"
+#include "texture.h"
 #include "wrappers.h"
 
 #include <imgui.h>
@@ -38,6 +39,7 @@ public:
             printf("Failed to look up minimal Vulkan loader/ICD\n!");
             return false;
         }
+        // glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
 
         if (!glfwInit()) {
             printf("Failed to init GLFW!\n");
@@ -221,10 +223,20 @@ void Application::RunLoop()
 
     bufferA.Update(device, &data, sizeof(data));
 
+    //
+    Texture* img1 =
+        Texture::LoadFromFile(m_context.physicalDevice(), device, queue, m_cmdPool, "img/img1.png",
+                              VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+    Texture* img2 =
+        Texture::LoadFromFile(m_context.physicalDevice(), device, queue, m_cmdPool, "img/Cat_November_2010-1a.jpg",
+                              VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
     PipelineSimple pipelineSimple("simple");
     pipelineSimple.Create(device, m_swapchain->format());
-
     pipelineSimple.pushData.vertexBufferAddress = bufferA.address;
+    pipelineSimple.pushData.textureIdx          = 0;
+
+    pipelineSimple.SetImage(device, 0, img1->view(), img1->sampler());
+    pipelineSimple.SetImage(device, 1, img2->view(), img2->sampler());
 
     uint32_t frameIdx = 0;
     int32_t  color    = 0;
@@ -338,12 +350,19 @@ void Application::RunLoop()
             {
                 glm::mat4 mvp = glm::mat4(1.0f);
 
-                pipelineSimple.pushData.mvp = mvp;
+                pipelineSimple.pushData.mvp                 = mvp;
                 pipelineSimple.pushData.vertexBufferAddress = dst.address;
+
+                if (frameIdx % 100 == 0) {
+                    pipelineSimple.pushData.textureIdx = (pipelineSimple.pushData.textureIdx ? 0 : 1);
+                }
 
                 vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineSimple.pipeline());
                 vkCmdSetScissor(cmdBuffer, 0, 1, &m_scissor);
                 vkCmdSetViewport(cmdBuffer, 0, 1, &m_viewport);
+                VkDescriptorSet descSet = pipelineSimple.descSet();
+                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineSimple.layout(), 0, 1,
+                                        &descSet, 0, nullptr);
                 vkCmdPushConstants(cmdBuffer, pipelineSimple.layout(), VK_SHADER_STAGE_ALL, 0,
                                    sizeof(pipelineSimple.pushData), &pipelineSimple.pushData);
                 vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
@@ -392,6 +411,8 @@ void Application::RunLoop()
 
     bufferA.Destroy(device);
     bufferB.Destroy(device);
+    img1->Destroy(device);
+    img2->Destroy(device);
 }
 
 int main()

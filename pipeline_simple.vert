@@ -16,6 +16,7 @@ const vec3 colors[3] = vec3[](
     );
 
 layout(location = 0) out vec3 out_color;
+layout(location = 1) out vec2 out_uv;
 
 layout(buffer_reference) buffer VertexDataPtr {
     vec4 positions[3];
@@ -28,7 +29,9 @@ layout(push_constant) uniform PushConstants {
 
 void main() {
     vec3 current_pos = constants.vertexData.positions[gl_VertexIndex].xyz;
+    vec2 uv = (current_pos.xy + vec2(1.0f, 1.0f)) / 2.0f;
 
     gl_Position = constants.mvp * vec4(current_pos, 1.0f);
     out_color = colors[gl_VertexIndex % 3];
+    out_uv = uv;
 }

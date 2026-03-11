@@ -54,7 +54,7 @@ void DescriptorMgmt::CreatePool(const VkDevice device)
     VkDescriptorPoolCreateInfo createInfo = {
         .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
         .pNext         = nullptr,
-        .flags         = 0,
+        .flags         = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
         .maxSets       = 4,
         .poolSizeCount = (uint32_t)poolSizes.size(),
         .pPoolSizes    = poolSizes.data(),
@@ -68,6 +68,8 @@ void DescriptorMgmt::CreatePool(const VkDevice device)
 
 VkDescriptorSetLayout DescriptorMgmt::CreateLayout(const VkDevice device)
 {
+    std::vector<VkDescriptorBindingFlags>     flags(m_bindings.size(), VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT |
+                                                                           VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT);
     std::vector<VkDescriptorSetLayoutBinding> bindings;
     bindings.reserve(m_bindings.size());
 
@@ -75,10 +77,17 @@ VkDescriptorSetLayout DescriptorMgmt::CreateLayout(const VkDevice device)
         bindings.push_back(entry.second);
     }
 
+    VkDescriptorSetLayoutBindingFlagsCreateInfo flagInfo = {
+        .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
+        .pNext         = nullptr,
+        .bindingCount  = (uint32_t)flags.size(),
+        .pBindingFlags = flags.data(),
+    };
+
     VkDescriptorSetLayoutCreateInfo createInfo = {
         .sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-        .pNext        = nullptr,
-        .flags        = 0,
+        .pNext        = &flagInfo,
+        .flags        = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
         .bindingCount = (uint32_t)bindings.size(),
         .pBindings    = bindings.data(),
     };

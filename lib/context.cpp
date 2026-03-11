@@ -95,17 +95,24 @@ VkDevice Context::CreateDevice(const std::vector<const char*>& extensions)
     std::vector<const char*> finalExtensions = extensions;
     finalExtensions.insert(finalExtensions.end(), swapchainExtensions.begin(), swapchainExtensions.end());
 
-    VkPhysicalDeviceBufferDeviceAddressFeatures bda = {
-        .sType                            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES,
-        .pNext                            = nullptr,
-        .bufferDeviceAddress              = VK_TRUE,
-        .bufferDeviceAddressCaptureReplay = VK_FALSE,
-        .bufferDeviceAddressMultiDevice   = VK_FALSE,
+    VkPhysicalDeviceFeatures2 baseFeatures = {
+        .sType    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+        .pNext    = nullptr,
+        .features = {},
     };
+    baseFeatures.features.shaderSampledImageArrayDynamicIndexing = VK_TRUE;
+
+    VkPhysicalDeviceVulkan12Features vulkan12Features          = {};
+    vulkan12Features.sType                                     = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    vulkan12Features.pNext                                     = &baseFeatures;
+    vulkan12Features.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+    vulkan12Features.descriptorBindingPartiallyBound           = VK_TRUE;
+    vulkan12Features.bufferDeviceAddress                       = VK_TRUE;
+    vulkan12Features.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
 
     VkPhysicalDeviceMaintenance5FeaturesKHR maintenance5 = {
         .sType        = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_FEATURES_KHR,
-        .pNext        = &bda,
+        .pNext        = &vulkan12Features,
         .maintenance5 = VK_TRUE,
     };
 

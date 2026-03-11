@@ -16,5 +16,5 @@ const vec2 imageSize = vec2(800, 600);
 
 void main() {
     uint idx = gl_GlobalInvocationID.x;
-    dstBuffer.positions[idx] = srcBuffer.positions[idx] + vec4(0.001, 0.001, 0.01, 0.01);
+    dstBuffer.positions[idx] = srcBuffer.positions[idx] + vec4(0.001, 0.001, 0.00, 0.00);
 }

@@ -52,6 +52,7 @@ add_executable(${NAME}
     lib/swapchain.cpp
     lib/wrappers.cpp
     lib/descriptors.cpp
+    lib/texture.cpp
 )
 target_include_directories(${NAME} PRIVATE
     ${Vulkan_INCLUDE_DIRS}
@@ -61,7 +62,7 @@ target_include_directories(${NAME} PRIVATE
 )
 
 target_link_libraries(${NAME}
-    PRIVATE glfw Vulkan::Vulkan imgui
+    PRIVATE glfw Vulkan::Vulkan imgui stb
 )
 
 add_shaders(app
