@@ -4,7 +4,6 @@
 #include <vulkan/vulkan_core.h>
 
 #include "buffer.h"
-#include "descriptors.h"
 
 class PipelineComputePos {
 public:
@@ -27,5 +26,8 @@ private:
     VkPipeline        m_pipeline = VK_NULL_HANDLE;
     VkPipelineLayout  m_layout   = VK_NULL_HANDLE;
 
-    DescriptorMgmt m_descMgmt;
+    struct ComputePushConstant {
+        VkDeviceAddress srcAddress;
+        VkDeviceAddress dstAddress;
+    } m_pushData = {};
 };

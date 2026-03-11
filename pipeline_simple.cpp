@@ -25,7 +25,7 @@ void PipelineSimple::Create(const VkDevice device, const VkFormat colorFormat)
     SetResourceName(device, VK_OBJECT_TYPE_DESCRIPTOR_SET, m_descMgmt.Set(0).Get(), "simpleDescSet");
 
     // Layout: nothing used!
-    m_layout = CreatePipelineLayout(device, {m_descMgmt.Layout()}, sizeof(glm::mat4), "simpleLayout");
+    m_layout = CreatePipelineLayout(device, {}, sizeof(glm::mat4) + sizeof(VkDeviceAddress), "simpleLayout");
 
     // Create Pipeline
     VkShaderModule vertex   = CreateShaderModule(device, SPV_simple_vert, sizeof(SPV_simple_vert), "simpleVertex");
@@ -35,32 +35,6 @@ void PipelineSimple::Create(const VkDevice device, const VkFormat colorFormat)
 
     vkDestroyShaderModule(device, vertex, nullptr);
     vkDestroyShaderModule(device, fragment, nullptr);
-}
-
-void PipelineSimple::SetBuffer(const VkDevice device, BufferInfo src)
-{
-    VkDescriptorSet descSet = m_descMgmt.Set(0).Get();
-
-    VkDescriptorBufferInfo srcInfo = {
-        .buffer = src.buffer,
-        .offset = 0,
-        .range  = VK_WHOLE_SIZE,
-    };
-
-    VkWriteDescriptorSet writeInfos[2] = {{
-        .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .pNext            = nullptr,
-        .dstSet           = descSet,
-        .dstBinding       = 0,
-        .dstArrayElement  = 0,
-        .descriptorCount  = 1,
-        .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .pImageInfo       = nullptr,
-        .pBufferInfo      = &srcInfo,
-        .pTexelBufferView = nullptr,
-    }};
-
-    vkUpdateDescriptorSets(device, 1, writeInfos, 0, nullptr);
 }
 
 void PipelineSimple::Destroy(const VkDevice device)

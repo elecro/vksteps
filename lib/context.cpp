@@ -95,9 +95,17 @@ VkDevice Context::CreateDevice(const std::vector<const char*>& extensions)
     std::vector<const char*> finalExtensions = extensions;
     finalExtensions.insert(finalExtensions.end(), swapchainExtensions.begin(), swapchainExtensions.end());
 
+    VkPhysicalDeviceBufferDeviceAddressFeatures bda = {
+        .sType                            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES,
+        .pNext                            = nullptr,
+        .bufferDeviceAddress              = VK_TRUE,
+        .bufferDeviceAddressCaptureReplay = VK_FALSE,
+        .bufferDeviceAddressMultiDevice   = VK_FALSE,
+    };
+
     VkPhysicalDeviceMaintenance5FeaturesKHR maintenance5 = {
         .sType        = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_FEATURES_KHR,
-        .pNext        = nullptr,
+        .pNext        = &bda,
         .maintenance5 = VK_TRUE,
     };
 

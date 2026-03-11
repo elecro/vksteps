@@ -3,14 +3,16 @@
 #include <vulkan/vulkan_core.h>
 
 struct BufferInfo {
-    VkDeviceSize   size;
-    VkBuffer       buffer;
-    VkDeviceMemory memory;
+    VkDeviceSize    size;
+    VkBuffer        buffer;
+    VkDeviceMemory  memory;
+    VkDeviceAddress address;
 
-    static BufferInfo Create(const VkPhysicalDevice phyDevice, const VkDevice device, VkDeviceSize size, VkBufferUsageFlags usageFlags);
+    static BufferInfo
+    Create(const VkPhysicalDevice phyDevice, const VkDevice device, VkDeviceSize size, VkBufferUsageFlags usageFlags);
 
     void* Map(const VkDevice device);
-    void Unmap(const VkDevice device);
+    void  Unmap(const VkDevice device);
 
     void Update(const VkDevice device, const void* inputPtr, size_t size);
 

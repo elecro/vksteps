@@ -201,9 +201,11 @@ void Application::RunLoop()
     };
 
     BufferInfo bufferA = BufferInfo::Create(m_context.physicalDevice(), device, sizeof(UBOData),
-                                            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+                                            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+                                                VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT_KHR);
     BufferInfo bufferB = BufferInfo::Create(m_context.physicalDevice(), device, sizeof(UBOData),
-                                            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+                                            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+                                                VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT_KHR);
 
     PipelineComputePos compute("positionCalc");
     compute.Create(device);
@@ -222,7 +224,7 @@ void Application::RunLoop()
     PipelineSimple pipelineSimple("simple");
     pipelineSimple.Create(device, m_swapchain->format());
 
-    pipelineSimple.SetBuffer(device, bufferA);
+    pipelineSimple.pushData.vertexBufferAddress = bufferA.address;
 
     uint32_t frameIdx = 0;
     int32_t  color    = 0;
@@ -270,7 +272,6 @@ void Application::RunLoop()
             BufferInfo& dst = frameIdx % 2 == 0 ? bufferB : bufferA;
 
             compute.SetBuffers(device, src, dst);
-            pipelineSimple.SetBuffer(device, dst);
 
             compute.CmdDispatch(cmdBuffer);
 
@@ -337,13 +338,14 @@ void Application::RunLoop()
             {
                 glm::mat4 mvp = glm::mat4(1.0f);
 
+                pipelineSimple.pushData.mvp = mvp;
+                pipelineSimple.pushData.vertexBufferAddress = dst.address;
+
                 vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineSimple.pipeline());
                 vkCmdSetScissor(cmdBuffer, 0, 1, &m_scissor);
                 vkCmdSetViewport(cmdBuffer, 0, 1, &m_viewport);
-                VkDescriptorSet descSet = pipelineSimple.descSet();
-                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineSimple.layout(), 0, 1,
-                                        &descSet, 0, nullptr);
-                vkCmdPushConstants(cmdBuffer, pipelineSimple.layout(), VK_SHADER_STAGE_ALL, 0, sizeof(mvp), &mvp);
+                vkCmdPushConstants(cmdBuffer, pipelineSimple.layout(), VK_SHADER_STAGE_ALL, 0,
+                                   sizeof(pipelineSimple.pushData), &pipelineSimple.pushData);
                 vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
             }
 

@@ -5,6 +5,7 @@
 
 #include "buffer.h"
 #include "descriptors.h"
+#include "glm_config.h"
 
 class PipelineSimple {
 public:
@@ -20,7 +21,10 @@ public:
     VkPipelineLayout layout() const { return m_layout; }
     VkDescriptorSet  descSet() { return m_descMgmt.Set(0).Get(); }
 
-    void SetBuffer(const VkDevice device, BufferInfo src);
+    struct PushConstantData {
+        glm::mat4       mvp;
+        VkDeviceAddress vertexBufferAddress;
+    } pushData = {};
 
 private:
     VkPipeline CreatePipeline(const VkDevice       device,
