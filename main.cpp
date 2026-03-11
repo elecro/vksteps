@@ -266,6 +266,40 @@ void Application::RunLoop()
             };
             vkBeginCommandBuffer(cmdBuffer, &beginInfo);
 
+            BufferInfo& src = frameIdx % 2 == 0 ? bufferA : bufferB;
+            BufferInfo& dst = frameIdx % 2 == 0 ? bufferB : bufferA;
+
+            compute.SetBuffers(device, src, dst);
+            pipelineSimple.SetBuffer(device, dst);
+
+            compute.CmdDispatch(cmdBuffer);
+
+            /*    VkPipelineStageFlags2    srcStageMask;
+            VkAccessFlags2           srcAccessMask;
+            VkPipelineStageFlags2    dstStageMask;
+            VkAccessFlags2           dstAccessMask;*/
+            VkMemoryBarrier2 memBarrier = {
+                .sType         = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,
+                .pNext         = nullptr,
+                .srcStageMask  = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
+                .srcAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT,
+                .dstStageMask  = VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT,
+                .dstAccessMask = VK_ACCESS_2_MEMORY_READ_BIT,
+            };
+            VkDependencyInfo barrierInfo = {
+                .sType                    = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+                .pNext                    = nullptr,
+                .dependencyFlags          = 0,
+                .memoryBarrierCount       = 1,
+                .pMemoryBarriers          = &memBarrier,
+                .bufferMemoryBarrierCount = 0,
+                .pBufferMemoryBarriers    = nullptr,
+                .imageMemoryBarrierCount  = 0,
+                .pImageMemoryBarriers     = nullptr,
+            };
+
+            vkCmdPipelineBarrier2(cmdBuffer, &barrierInfo);
+
             m_swapchain->CmdTransitionToRender(cmdBuffer, swapchainImage, queueFamilyIdx);
 
             // Begin render commands

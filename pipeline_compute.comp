@@ -1,7 +1,9 @@
 #version 450
 
-layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(local_size_x = 3, local_size_y = 1, local_size_z = 1) in;
 // gl_GlobalInvocationID
+
+//layout(constant_id = 2) const uint DEBUG = 0;
 
 layout(set = 0, binding = 0) uniform Input {
     vec4 positions[3];
@@ -11,8 +13,18 @@ layout(set = 0, binding = 1) writeonly buffer Output {
     vec4 positions[3];
 } dstBuffer;
 
+// pos: xy
+// direction: zw
+
+const vec2 imageSize = vec2(800, 600);
+
 void main() {
-    for (uint idx = 0; idx < 3; idx++) {
-        dstBuffer.positions[idx] = srcBuffer.positions[idx] + vec4(0.01, 0.01, 0.01, 0.01);
-    }
+    uint idx = gl_GlobalInvocationID.x;
+    //for (uint idx = 0; idx < 3; idx++) {
+    //vec4 data = srcBuffer.positions[idx];
+
+    //vec2 pos = data.xy + data.zw;
+
+    dstBuffer.positions[idx] = srcBuffer.positions[idx] + vec4(0.01, 0.01, 0.01, 0.01);
+    //}
 }
