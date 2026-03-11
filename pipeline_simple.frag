@@ -1,5 +1,5 @@
 #version 450
-#extension GL_ARB_gpu_shader_int64 : enable
+#extension GL_EXT_nonuniform_qualifier : enable
 
 layout(set = 0, binding = 0) uniform sampler2D images[8];
 
@@ -16,6 +16,13 @@ layout(push_constant) uniform PushConstants {
 
 
 void main() {
-    vec4 pixel = texture(images[constants.textureIdx], in_uv);
+    uint textureIdx;
+    if (in_uv.x < 0.5f) {
+        textureIdx = constants.textureIdx;
+    } else {
+        textureIdx = (constants.textureIdx == 1) ? 0 : 1;
+    }
+
+    vec4 pixel = texture(images[nonuniformEXT(textureIdx)], in_uv);
     out_color = vec4(pixel.rgb, 1.0f);
 }
