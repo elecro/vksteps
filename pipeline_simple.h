@@ -18,6 +18,9 @@ public:
 
     VkPipeline       pipeline() const { return m_pipeline; }
     VkPipelineLayout layout() const { return m_layout; }
+    VkDescriptorSet  descSet() { return m_descMgmt.Set(0).Get(); }
+
+    void SetBuffer(const VkDevice device, BufferInfo src);
 
 private:
     VkPipeline CreatePipeline(const VkDevice       device,
@@ -28,6 +31,5 @@ private:
     const std::string m_name;
     VkPipeline        m_pipeline = VK_NULL_HANDLE;
     VkPipelineLayout  m_layout   = VK_NULL_HANDLE;
-
     DescriptorMgmt    m_descMgmt;
 };

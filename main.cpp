@@ -222,6 +222,8 @@ void Application::RunLoop()
     PipelineSimple pipelineSimple("simple");
     pipelineSimple.Create(device, m_swapchain->format());
 
+    pipelineSimple.SetBuffer(device, bufferA);
+
     int32_t color = 0;
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
@@ -303,6 +305,9 @@ void Application::RunLoop()
                 vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineSimple.pipeline());
                 vkCmdSetScissor(cmdBuffer, 0, 1, &m_scissor);
                 vkCmdSetViewport(cmdBuffer, 0, 1, &m_viewport);
+                VkDescriptorSet descSet = pipelineSimple.descSet();
+                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineSimple.layout(), 0, 1,
+                    &descSet, 0, nullptr);
                 vkCmdPushConstants(cmdBuffer, pipelineSimple.layout(), VK_SHADER_STAGE_ALL, 0, sizeof(mvp), &mvp);
                 vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
             }
@@ -336,6 +341,12 @@ void Application::RunLoop()
         m_swapchain->QueuePresent(queue, m_presentSemaphore);
 
         vkDeviceWaitIdle(device);
+/*
+        int value =0;
+        scanf("%d", &value);
+        if (value== 1) {
+            break;
+        }*/
     }
 
     pipelineSimple.Destroy(device);

@@ -37,6 +37,34 @@ void PipelineSimple::Create(const VkDevice device, const VkFormat colorFormat)
     vkDestroyShaderModule(device, fragment, nullptr);
 }
 
+void PipelineSimple::SetBuffer(const VkDevice device, BufferInfo src)
+{
+    VkDescriptorSet descSet = m_descMgmt.Set(0).Get();
+
+    VkDescriptorBufferInfo srcInfo = {
+        .buffer = src.buffer,
+        .offset = 0,
+        .range = VK_WHOLE_SIZE,
+    };
+
+    VkWriteDescriptorSet writeInfos[2] = {
+        {
+            .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .pNext            = nullptr,
+            .dstSet           = descSet,
+            .dstBinding       = 0,
+            .dstArrayElement  = 0,
+            .descriptorCount  = 1,
+            .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .pImageInfo       = nullptr,
+            .pBufferInfo      = &srcInfo,
+            .pTexelBufferView = nullptr,
+        }
+    };
+
+    vkUpdateDescriptorSets(device, 1, writeInfos, 0, nullptr);
+}
+
 void PipelineSimple::Destroy(const VkDevice device)
 {
     vkDestroyPipeline(device, m_pipeline, nullptr);

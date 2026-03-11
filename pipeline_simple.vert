@@ -15,12 +15,16 @@ const vec3 colors[3] = vec3[](
 
 layout(location = 0) out vec3 out_color;
 
+layout(set = 0, binding = 0) uniform Input {
+    vec4 positions[3];
+} srcBuffer;
+
 layout(push_constant) uniform PushConstants {
     layout(offset = 0) mat4 mvp;
 } constants;
 
 void main() {
-    vec3 current_pos = positions[gl_VertexIndex];
+    vec3 current_pos = srcBuffer.positions[gl_VertexIndex].xyz;
 
     gl_Position = constants.mvp * vec4(current_pos, 1.0f);
     out_color = colors[gl_VertexIndex % 3];
