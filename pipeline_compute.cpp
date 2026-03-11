@@ -108,6 +108,14 @@ void PipelineComputePos::SetBuffers(VkDevice device, BufferInfo& src, BufferInfo
     vkUpdateDescriptorSets(device, 2, writeInfos, 0, nullptr);
 }
 
+void PipelineComputePos::CmdDispatch(VkCommandBuffer cmdBuffer)
+{
+    VkDescriptorSet descSet = m_descMgmt.Set(0).Get();
+    vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
+    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_layout, 0, 1, &descSet, 0, nullptr);
+    vkCmdDispatch(cmdBuffer, 1, 1, 1);
+}
+
 void PipelineComputePos::Destroy(const VkDevice device)
 {
     vkDestroyPipeline(device, m_pipeline, nullptr);

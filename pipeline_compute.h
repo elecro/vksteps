@@ -17,15 +17,15 @@ public:
     void Destroy(const VkDevice device);
 
     void SetBuffers(VkDevice device, BufferInfo& src, BufferInfo& dst);
+    void CmdDispatch(VkCommandBuffer cmdBuffer);
 
     VkPipeline       pipeline() const { return m_pipeline; }
     VkPipelineLayout layout() const { return m_layout; }
-
 
 private:
     const std::string m_name;
     VkPipeline        m_pipeline = VK_NULL_HANDLE;
     VkPipelineLayout  m_layout   = VK_NULL_HANDLE;
 
-    DescriptorMgmt    m_descMgmt;
+    DescriptorMgmt m_descMgmt;
 };

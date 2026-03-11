@@ -224,7 +224,8 @@ void Application::RunLoop()
 
     pipelineSimple.SetBuffer(device, bufferA);
 
-    int32_t color = 0;
+    uint32_t frameIdx = 0;
+    int32_t  color    = 0;
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
         {
@@ -307,7 +308,7 @@ void Application::RunLoop()
                 vkCmdSetViewport(cmdBuffer, 0, 1, &m_viewport);
                 VkDescriptorSet descSet = pipelineSimple.descSet();
                 vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineSimple.layout(), 0, 1,
-                    &descSet, 0, nullptr);
+                                        &descSet, 0, nullptr);
                 vkCmdPushConstants(cmdBuffer, pipelineSimple.layout(), VK_SHADER_STAGE_ALL, 0, sizeof(mvp), &mvp);
                 vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
             }
@@ -341,7 +342,8 @@ void Application::RunLoop()
         m_swapchain->QueuePresent(queue, m_presentSemaphore);
 
         vkDeviceWaitIdle(device);
-/*
+        frameIdx++;
+        /*
         int value =0;
         scanf("%d", &value);
         if (value== 1) {

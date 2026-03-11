@@ -44,23 +44,21 @@ void PipelineSimple::SetBuffer(const VkDevice device, BufferInfo src)
     VkDescriptorBufferInfo srcInfo = {
         .buffer = src.buffer,
         .offset = 0,
-        .range = VK_WHOLE_SIZE,
+        .range  = VK_WHOLE_SIZE,
     };
 
-    VkWriteDescriptorSet writeInfos[2] = {
-        {
-            .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .pNext            = nullptr,
-            .dstSet           = descSet,
-            .dstBinding       = 0,
-            .dstArrayElement  = 0,
-            .descriptorCount  = 1,
-            .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .pImageInfo       = nullptr,
-            .pBufferInfo      = &srcInfo,
-            .pTexelBufferView = nullptr,
-        }
-    };
+    VkWriteDescriptorSet writeInfos[2] = {{
+        .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext            = nullptr,
+        .dstSet           = descSet,
+        .dstBinding       = 0,
+        .dstArrayElement  = 0,
+        .descriptorCount  = 1,
+        .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .pImageInfo       = nullptr,
+        .pBufferInfo      = &srcInfo,
+        .pTexelBufferView = nullptr,
+    }};
 
     vkUpdateDescriptorSets(device, 1, writeInfos, 0, nullptr);
 }
