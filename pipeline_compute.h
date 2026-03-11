@@ -6,25 +6,23 @@
 #include "buffer.h"
 #include "descriptors.h"
 
-class PipelineSimple {
+class PipelineComputePos {
 public:
-    PipelineSimple(const std::string& name)
+    PipelineComputePos(const std::string& name)
         : m_name(name)
     {
     }
 
-    void Create(const VkDevice device, const VkFormat colorFormat);
+    void Create(const VkDevice device);
     void Destroy(const VkDevice device);
+
+    void SetBuffers(VkDevice device, BufferInfo& src, BufferInfo& dst);
 
     VkPipeline       pipeline() const { return m_pipeline; }
     VkPipelineLayout layout() const { return m_layout; }
 
-private:
-    VkPipeline CreatePipeline(const VkDevice       device,
-                              const VkShaderModule shaderVertex,
-                              const VkShaderModule shaderFragment,
-                              const VkFormat       colorFormat);
 
+private:
     const std::string m_name;
     VkPipeline        m_pipeline = VK_NULL_HANDLE;
     VkPipelineLayout  m_layout   = VK_NULL_HANDLE;

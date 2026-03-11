@@ -95,9 +95,15 @@ VkDevice Context::CreateDevice(const std::vector<const char*>& extensions)
     std::vector<const char*> finalExtensions = extensions;
     finalExtensions.insert(finalExtensions.end(), swapchainExtensions.begin(), swapchainExtensions.end());
 
+    VkPhysicalDeviceMaintenance5FeaturesKHR maintenance5 = {
+        .sType        = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_FEATURES_KHR,
+        .pNext        = nullptr,
+        .maintenance5 = VK_TRUE,
+    };
+
     VkPhysicalDeviceExtendedDynamicStateFeaturesEXT extendedDynamic = {
         .sType                = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT,
-        .pNext                = nullptr,
+        .pNext                = &maintenance5,
         .extendedDynamicState = VK_TRUE,
     };
 

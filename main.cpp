@@ -17,6 +17,7 @@
 
 #include "context.h"
 #include "imgui_integration.h"
+#include "pipeline_compute.h"
 #include "pipeline_simple.h"
 #include "swapchain.h"
 #include "wrappers.h"
@@ -195,6 +196,29 @@ void Application::RunLoop()
     VkQueue  queue          = m_context.queue();
     VkDevice device         = m_context.device();
 
+    struct UBOData {
+        glm::vec4 positions[3];
+    };
+
+    BufferInfo bufferA = BufferInfo::Create(m_context.physicalDevice(), device, sizeof(UBOData),
+                                            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+    BufferInfo bufferB = BufferInfo::Create(m_context.physicalDevice(), device, sizeof(UBOData),
+                                            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+
+    PipelineComputePos compute("positionCalc");
+    compute.Create(device);
+    compute.SetBuffers(device, bufferA, bufferB);
+
+    UBOData data = {
+        {
+            glm::vec4(-0.5f, -0.5f, 0.0f, 0.0f),
+            glm::vec4(-0.5f, 0.5f, 0.0f, 0.0f),
+            glm::vec4(0.5f, -0.5f, 0.0f, 0.0f),
+        },
+    };
+
+    bufferA.Update(device, &data, sizeof(data));
+
     PipelineSimple pipelineSimple("simple");
     pipelineSimple.Create(device, m_swapchain->format());
 
@@ -315,6 +339,10 @@ void Application::RunLoop()
     }
 
     pipelineSimple.Destroy(device);
+    compute.Destroy(device);
+
+    bufferA.Destroy(device);
+    bufferB.Destroy(device);
 }
 
 int main()

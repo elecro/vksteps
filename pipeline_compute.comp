@@ -1,0 +1,15 @@
+#version 450
+
+layout(set = 0, binding = 0) uniform Input {
+    vec4 positions[3];
+} srcBuffer;
+
+layout(set = 0, binding = 1) writeonly buffer Output {
+    vec4 positions[3];
+} dstBuffer;
+
+void main() {
+    for (uint idx = 0; idx < 3; idx++) {
+        dstBuffer.positions[idx] = srcBuffer.positions[idx] + vec4(0.1, 0.1, 0.1, 0.1);
+    }
+}

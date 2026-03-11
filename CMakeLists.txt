@@ -44,12 +44,14 @@ set(NAME app)
 add_executable(${NAME}
     main.cpp
     pipeline_simple.cpp
+    pipeline_compute.cpp
 
-
+    lib/buffer.cpp
     lib/context.cpp
     lib/imgui_integration.cpp
     lib/swapchain.cpp
     lib/wrappers.cpp
+    lib/descriptors.cpp
 )
 target_include_directories(${NAME} PRIVATE
     ${Vulkan_INCLUDE_DIRS}
@@ -65,4 +67,5 @@ target_link_libraries(${NAME}
 add_shaders(app
     pipeline_simple.vert SPV_simple_vert
     pipeline_simple.frag SPV_simple_frag
+    pipeline_compute.comp SPV_compute_comp
 )

@@ -16,8 +16,16 @@ namespace {
 
 void PipelineSimple::Create(const VkDevice device, const VkFormat colorFormat)
 {
+    m_descMgmt.SetDescriptor(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    m_descMgmt.CreateLayout(device);
+    SetResourceName(device, VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, m_descMgmt.Layout(), "simpleDescLayout");
+
+    m_descMgmt.CreatePool(device);
+    m_descMgmt.CreateDescriptorSets(device, 1);
+    SetResourceName(device, VK_OBJECT_TYPE_DESCRIPTOR_SET, m_descMgmt.Set(0).Get(), "simpleDescSet");
+
     // Layout: nothing used!
-    m_layout = CreatePipelineLayout(device, {}, sizeof(glm::mat4), "simpleLayout");
+    m_layout = CreatePipelineLayout(device, {m_descMgmt.Layout()}, sizeof(glm::mat4), "simpleLayout");
 
     // Create Pipeline
     VkShaderModule vertex   = CreateShaderModule(device, SPV_simple_vert, sizeof(SPV_simple_vert), "simpleVertex");
@@ -33,6 +41,7 @@ void PipelineSimple::Destroy(const VkDevice device)
 {
     vkDestroyPipeline(device, m_pipeline, nullptr);
     vkDestroyPipelineLayout(device, m_layout, nullptr);
+    m_descMgmt.Destroy(device);
 }
 
 VkPipeline PipelineSimple::CreatePipeline(const VkDevice       device,
