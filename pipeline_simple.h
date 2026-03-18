@@ -5,6 +5,7 @@
 
 #include "buffer.h"
 #include "descriptors.h"
+#include "glm_config.h"
 
 class PipelineSimple {
 public:

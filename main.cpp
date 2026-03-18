@@ -20,6 +20,7 @@
 #include "pipeline_compute.h"
 #include "pipeline_simple.h"
 #include "swapchain.h"
+#include "texture.h"
 #include "wrappers.h"
 
 #include <imgui.h>
@@ -38,6 +39,7 @@ public:
             printf("Failed to look up minimal Vulkan loader/ICD\n!");
             return false;
         }
+        // glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
 
         if (!glfwInit()) {
             printf("Failed to init GLFW!\n");
@@ -219,6 +221,13 @@ void Application::RunLoop()
 
     bufferA.Update(device, &data, sizeof(data));
 
+    //
+    Texture* img1 =
+        Texture::LoadFromFile(m_context.physicalDevice(), device, queue, m_cmdPool, "img/img1.png",
+                              VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+    Texture* img2 =
+        Texture::LoadFromFile(m_context.physicalDevice(), device, queue, m_cmdPool, "img/Cat_November_2010-1a.jpg",
+                              VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
     PipelineSimple pipelineSimple("simple");
     pipelineSimple.Create(device, m_swapchain->format());
 
@@ -390,6 +399,8 @@ void Application::RunLoop()
 
     bufferA.Destroy(device);
     bufferB.Destroy(device);
+    img1->Destroy(device);
+    img2->Destroy(device);
 }
 
 int main()
